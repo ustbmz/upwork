@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { submitContactClientSide } from "@/lib/contact-submit";
 
 export function ContactSection() {
   const [status, setStatus] = useState<
@@ -18,24 +19,14 @@ export function ContactSection() {
       email: (form.elements.namedItem("email") as HTMLInputElement).value,
       body: (form.elements.namedItem("body") as HTMLTextAreaElement).value,
     };
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      const json = (await res.json()) as { ok?: boolean; error?: string };
-      if (!res.ok || !json.ok) {
-        setStatus("error");
-        setMessage(json.error ?? "Something went wrong.");
-        return;
-      }
-      setStatus("success");
-      form.reset();
-    } catch {
+    const json = submitContactClientSide(data);
+    if (!json.ok) {
       setStatus("error");
-      setMessage("Network error. Try again.");
+      setMessage(json.error);
+      return;
     }
+    setStatus("success");
+    form.reset();
   }
 
   const fieldClass =
@@ -55,8 +46,8 @@ export function ContactSection() {
             Tell us what you are building.
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-[var(--ui-muted)] sm:text-base">
-            This form posts to a Next.js Route Handler. Wire it to Resend,
-            Slack, or your CRM via environment variables for production.
+            Demo form: validated in the browser. For production, wire a server
+            or service (Resend, Slack, CRM) on a host that supports APIs.
           </p>
         </div>
 
